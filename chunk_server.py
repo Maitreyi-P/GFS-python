@@ -27,3 +27,37 @@ class ChunkServer(object):
             client, address = self.sock.accept()
             client.settimeout(60)
             threading.Thread(target = self.commonlisten,args = (client,address)).start()
+            
+            
+    def connect_to_master(self,fname,chunk_id,filename):
+        try:
+            s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            s.connect((socket.gethostbyname('localhost'),7082))
+        except:
+            try:
+                s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                s.connect((socket.gethostbyname('localhost'),7083))
+            except:
+                print("No backup server is active...Try again later!!!")        
+                sys.exit()
+        
+        filenameToCS=fname
+        port=self.port
+        fname="chunkserver:"+fname+":"+chunk_id+":"+str(port)
+        s.send(bytes(fname,"utf-8"))
+        cport=s.recv(2048).decode("utf-8")
+        self.connectToChunk(cport,filenameToCS,chunk_id,filename)
+        
+    def connectToChunk(self,cport,filenameToCS,chunk_id,filename):
+        try:
+            s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            s.connect((socket.gethostbyname('localhost'),int(cport)))
+            fname="chunkserver:"+"dummy:"+filenameToCS+":"+chunk_id+":"+str(port_num)+":"
+            fname=fname.ljust(400,'~')
+            s.send(bytes(fname,"utf-8"))
+
+            f1=open(filename,'rb')
+            data=f1.read(2048)
+            s.send(data)
+        except:
+            pass
