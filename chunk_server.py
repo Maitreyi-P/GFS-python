@@ -121,3 +121,23 @@ class ChunkServer(object):
             path=self.myChunkDir+"/"+str(three)+"_"+str(two)
             with open(path,'wb') as f1:
                 f1.write(client.recv(2048))
+                
+    def listenToClient(self, client, address, chunk_server_no, chunk_id, filenaming):
+
+        if not os.access(self.filesystem, os.W_OK):
+            os.makedirs(self.filesystem)
+        
+        filename = self.filesystem+"/"+filenaming+"_"+chunk_id
+        with open(filename, 'wb') as f:
+            chunks_recv=client.recv(2048)
+            f.write(chunks_recv)
+
+        if chunk_server_no=="1":
+            self.chunkserver1_info.append((filenaming,chunk_id))
+        elif chunk_server_no=="2":
+            self.chunkserver2_info.append((filenaming,chunk_id))
+        elif chunk_server_no=="3":
+            self.chunkserver3_info.append((filenaming,chunk_id))
+        elif chunk_server_no=="4":
+            self.chunkserver4_info.append((filenaming,chunk_id))
+        self.connect_to_master(filenaming,chunk_id,filename)
