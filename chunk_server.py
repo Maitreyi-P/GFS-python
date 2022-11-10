@@ -141,3 +141,26 @@ class ChunkServer(object):
         elif chunk_server_no=="4":
             self.chunkserver4_info.append((filenaming,chunk_id))
         self.connect_to_master(filenaming,chunk_id,filename)
+
+
+if __name__ == "__main__":
+    while True:
+        try:
+            port_num = int(sys.argv[1])
+            if port_num==6467:
+                filesystem = os.getcwd()+"/"+str(1)
+                myChunkDir=filesystem
+            if port_num==6468:
+                filesystem = os.getcwd()+"/"+str(2)
+                myChunkDir=filesystem
+            if port_num==6469:
+                filesystem = os.getcwd()+"/"+str(3)
+                myChunkDir=filesystem
+            if port_num==6470:
+                filesystem = os.getcwd()+"/"+str(4)
+                myChunkDir=filesystem
+            break
+        except ValueError:
+            pass
+    print("Chunk Server Running")
+    ChunkServer('',port_num,myChunkDir, filesystem).listen()
