@@ -61,3 +61,63 @@ class ChunkServer(object):
             s.send(data)
         except:
             pass
+        
+    def listenToChunk(self,client,address,one,two,three):
+        path=self.myChunkDir+"/"+str(one)+"_"+str(two)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        with open(path, 'wb') as f:
+            c_recv=client.recv(2048)
+            f.write(c_recv)
+
+
+    def sendToClient(self,client,address,one,two,three):
+        path=self.myChunkDir+"/"+str(three)+"_"+str(two)
+        with open(path, 'rb') as f:
+            data=f.read(2048)
+            client.send(data)
+
+
+    def commonlisten(self,client,address):
+
+        to_recv=client.recv(400).decode("utf-8")
+        to_recv=to_recv.split(":")
+
+        if(to_recv[0]=="client"):
+            if(to_recv[1]=="upload"):
+                chunk_server_no=to_recv[2]
+                chunk_id=to_recv[3]
+                filenaming=to_recv[4]
+                self.listenToClient(client,address,chunk_server_no,chunk_id,filenaming)
+            if(to_recv[1]=="download"):
+                chunk_server_no=to_recv[2]
+                chunk_id=to_recv[3]
+                filenaming=to_recv[4]
+                self.sendToClient(client,address,chunk_server_no,chunk_id,filenaming)
+
+        elif(to_recv[0]=="chunkserver"):
+            self.listenToChunk(client,address,to_recv[2],to_recv[3],to_recv[4])
+        elif(to_recv[0]=="swap"):
+            s1=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            s1.connect((socket.gethostbyname('localhost'),int(to_recv[3])))
+            to_recv[1]=make_tuple(to_recv[1])
+            three=to_recv[1][0]
+            two=to_recv[1][1]
+            stri="downside"+":"+str(three)+":"+str(two)+":"
+            stri=stri.ljust(400,'~')
+            s1.send(bytes(stri,"utf-8"))
+            
+            
+            path=self.myChunkDir+"/"+str(three)+"_"+str(two)
+            with open(path, 'rb') as f:
+                data=f.read(2048)
+                s1.send(data)
+
+
+            s1.close()
+        elif(to_recv[0]=="downside"):
+            three=to_recv[1]
+            two=to_recv[2]
+            path=self.myChunkDir+"/"+str(three)+"_"+str(two)
+            with open(path,'wb') as f1:
+                f1.write(client.recv(2048))
